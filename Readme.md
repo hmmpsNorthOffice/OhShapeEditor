@@ -29,6 +29,13 @@ Maybe you want to start watching some nice tutorials using the editor from Youtu
 - ctrl + shift + s - Save as
 - Supr - Delete selected walls
 
+Additions from Hmmps modded dev branch
+left/right arrows - control time bar 
+ (press once for 0.01 second shift, hold 1 sec for multiple increments)
+
+- ctrl - m - Mirror (left/right) selected walls
+- ctrl + b - Mirror and Paste clipboard contents
+
 ## ℹ Level format
 
 OhShape Maps are in **.YML** format. Each **.YML** file includes a reference to a song file in **.OGG** format. OhShape includes a demo song ('Ice Flow' by [Kevin MacLeod]). You can open the demo .YML file to get an idea of how easy the format is. This example song is also inclueded in this repository, on the **examples** folder.
@@ -62,6 +69,13 @@ Also, you have to delete `Assets/Scripts/UniversalMediaPlayer.cs`
 - [OhShape Instagram]
 
 ## 🔧 Release notes
+
+### Hmmps Dev branch ### 1.0.3 modded
+Added [Ctrl]-m - Mirror (left/right) selected panels 
+Added [Ctrl]-b - Paste mirrored copy of clipboard objects 
+Added control of time bar using arrow keys 
+	Single press = 0.01 sec, hold down for 1 second for multiple increments
+
 ### 1.0.3
 - Added beginner mode
 - Changing difficulty will change the speed of the song
