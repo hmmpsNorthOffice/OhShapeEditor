@@ -29,8 +29,7 @@ Maybe you want to start watching some nice tutorials using the editor from Youtu
 - ctrl + shift + s - Save as
 - Supr - Delete selected walls
 
-Additions from Hmmps modded dev branch:
-
+Additions from Hmmps modded dev branch
 left/right arrows - control time bar 
  (press once for 0.01 second shift, hold 1 sec for multiple increments)
 
