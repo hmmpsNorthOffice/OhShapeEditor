@@ -69,6 +69,10 @@ public class OhShapeEditor : MonoBehaviour
     private float _currentScrollTime = 0;
     private Vector2 _waveTimeRange = Vector2.zero;
     private Canvas _mainCanvas;
+    
+    private int _CursorSpeedLimiter = 0;   // hmmps added, these are used in arrow key time bar control
+    private float _keyTimer = 0f;
+    private bool _keySingle = true;
 
     private WallObject _currentWallObject;
     private List<WallObject> _wallObjects;
@@ -195,6 +199,82 @@ public class OhShapeEditor : MonoBehaviour
             return;
         }
 
+
+        // Right/left arrow provides control of time bar using arrow keys
+	// pressing once moves 0.01 seconds, hold for 1 second for multiple increments
+        // begin hmmps edit ---------------  
+
+        if (Input.GetKey(KeyCode.RightArrow))  
+        {
+            //_keyTimer -= Time.deltaTime;
+            clearListOfSelectedObject();
+
+            if (_keySingle == true)  // Run only once until 1 second passes, then go ahead and run ...
+            {
+                _cursorTime += 0.01f;
+                SetCursorPosition();
+                _propertiesManager.UpdateClipTime(_cursorTime.ToString("F2"));
+
+                _keyTimer = Time.time;
+                _keySingle = false;
+            }
+
+            else if ((Time.time > (_keyTimer + 1)) && _keySingle == false)  // now run till keyup event.   
+            {
+                _CursorSpeedLimiter++;
+
+                if (_CursorSpeedLimiter > 3)   // limit cursor scrolling speed
+                {
+                    _cursorTime += 0.01f;
+                    SetCursorPosition();
+                    _propertiesManager.UpdateClipTime(_cursorTime.ToString("F2"));
+
+                    _CursorSpeedLimiter = 0;
+                }
+            }
+        }
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+        //_keyTimer -= Time.deltaTime;
+        clearListOfSelectedObject();
+
+        if (_keySingle == true)  // Run only once until 1 second passes, then go ahead and run ...
+            {
+                _cursorTime -= 0.01f;
+                    if (_cursorTime <= 0.0f) _cursorTime = 0.0f;
+                    SetCursorPosition();
+                _propertiesManager.UpdateClipTime(_cursorTime.ToString("F2"));
+
+                _keyTimer = Time.time;
+                _keySingle = false;
+            }
+
+            else if ((Time.time > (_keyTimer + 1)) && _keySingle == false)  // now run till keyup event.   
+            {
+                _CursorSpeedLimiter++;
+
+                if (_CursorSpeedLimiter > 3)   // limit cursor scrolling speed
+                {
+                    _cursorTime -= 0.01f;
+                    if (_cursorTime <= 0.0f) _cursorTime = 0.0f;
+                    SetCursorPosition();
+                    _propertiesManager.UpdateClipTime(_cursorTime.ToString("F2"));
+
+                    _CursorSpeedLimiter = 0;
+                }
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.RightArrow))
+        {
+            _keySingle = true;
+        }
+        if (Input.GetKeyUp(KeyCode.LeftArrow))
+        {
+            _keySingle = true;
+        }
+
         if (Input.GetKeyUp(KeyCode.Space))
         {
 
@@ -207,6 +287,9 @@ public class OhShapeEditor : MonoBehaviour
                 OnPlayClip();
             }
         }
+	
+	// end hmmps edit --------------- 
+	
         //Create New object whit key N, at current time if song is playing if not at cursor position
         if (Input.GetKeyDown(KeyCode.N))
         {
@@ -234,6 +317,16 @@ public class OhShapeEditor : MonoBehaviour
             {
                 Copy();
             }
+	    // begin hmmps edit ----------
+	    else if (Input.GetKeyDown(KeyCode.M))
+            {
+                Mirror();
+            }
+            else if (Input.GetKeyDown(KeyCode.B))
+            {
+                MirrorPaste();
+            }
+	    // end hmmps edit ----------
             else if (Input.GetKeyDown(KeyCode.V))
             {
                 Paste();
@@ -1331,22 +1424,76 @@ public class OhShapeEditor : MonoBehaviour
         _clipboard = new HashSet<WallObject>(_selectedWallObjects);
     }
 
+    public void MirrorPaste()
+    {
+        float initTime = Mathf.Infinity;
+        clearListOfSelectedObject();
+
+        int counter = 0;
+        foreach (WallObject wallObject in _clipboard)
+        {
+            counter++;
+            if (wallObject.Time < initTime) initTime = wallObject.Time;
+
+        }
+
+        string newWallObjectID = "";
+
+        foreach (WallObject wallObject in _clipboard)
+        {
+
+            float time = _cursorTime + wallObject.Time - initTime;
+            time = time > ClipInfo.ClipTimeSize ? ClipInfo.ClipTimeSize : time;
+
+            newWallObjectID = WallsUtils.MirrorWallObject(wallObject.WallObjectId);
+                
+            WallObject currentWallObject = _songManager.CreateWallObject(newWallObjectID, time, true, this);
+            addWallObjectToSelectedList(currentWallObject);
+
+            clearListOfSelectedObject();
+            currentWallObject.GetComponent<Transform>().Find("MarkLine").gameObject.SetActive(_zoom >= WallMarklineVisibleAtZoomLevel);
+            currentWallObject.GetComponent<Transform>().Find("Toggle/Wall Id").gameObject.SetActive(_zoom >= WallIdVisibleAtZoomLevel);
+        }
+    }
+   
+
+    public void Mirror()
+    {
+
+        _clipboard = new HashSet<WallObject>(_selectedWallObjects);
+        clearListOfSelectedObject(); 
+
+        foreach (WallObject wallObject in _clipboard)
+        {
+            wallObject.WallObjectId = WallsUtils.MirrorWallObject(wallObject.WallObjectId);
+        }
+    }
+
+
     public void Paste() 
     {
         // TODO what happens if time + songTime?
         // TODO set as not active
         float initTime = Mathf.Infinity;
         clearListOfSelectedObject();
+
         foreach (WallObject wallObject in _clipboard)
         {
             if (wallObject.Time < initTime) initTime = wallObject.Time;
         }
+
+
+        string newWallObjectID = "";
+
         foreach (WallObject wallObject in _clipboard)
         {
+               
+            newWallObjectID = wallObject.WallObjectId;      
+
             float time = _cursorTime + wallObject.Time - initTime;
             time = time > ClipInfo.ClipTimeSize ? ClipInfo.ClipTimeSize : time;
-            WallObject currentWallObject = _songManager.CreateWallObject(wallObject.WallObjectId, time, true, this);
-            addWallObjectToSelectedList(currentWallObject);
+            WallObject currentWallObject = _songManager.CreateWallObject(newWallObjectID, time, true, this);    // vz modified, passing actual string referenced original
+            addWallObjectToSelectedList(currentWallObject);                                                     // this caused modifications of orininal selected object
             currentWallObject.GetComponent<Transform>().Find("MarkLine").gameObject.SetActive(_zoom >= WallMarklineVisibleAtZoomLevel);
             currentWallObject.GetComponent<Transform>().Find("Toggle/Wall Id").gameObject.SetActive(_zoom >= WallIdVisibleAtZoomLevel);
         }
