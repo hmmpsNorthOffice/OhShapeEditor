@@ -28,6 +28,9 @@ Maybe you want to start watching some nice tutorials using the editor from Youtu
 - ctrl + s - Save
 - ctrl + shift + s - Save as
 - Supr - Delete selected walls
+- left/right arrows control time bar  
+- ctrl + m - Mirror (left/right) selected panels
+- ctrl + b - Paste mirror copied walls
 
 ## ℹ Level format
 
