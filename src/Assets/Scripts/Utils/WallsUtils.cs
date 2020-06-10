@@ -39,17 +39,96 @@ public static class WallsUtils
         return validWall;
     }
 
-	public static Walltype GetWallType(string id)
+    public static Walltype GetWallType(string id)
 	{
 		Regex regex = new Regex("(WP|WA|WH|WC|CN)\\..*");
 
 		if (!regex.IsMatch (id)) {
 			return Walltype.NONE;
 		}
-	
+
 		return (Walltype)Enum.Parse(typeof(Walltype), id.Substring(0, 2));
 	}
 
+    public static string MirrorWallObject(string id)
+    {
+        string[] splitedName = id.ToUpper().Split('.');
+        string MirroredID = "";
+
+        MirroredID = id;  // sets default (original panel) ... for cases WC, EV 
+
+        try
+        {
+            WallsUtils.Walltype wallType = (WallsUtils.Walltype)Enum.Parse(typeof(WallsUtils.Walltype), splitedName[0]);
+
+            char[] panelCode = splitedName[1].ToCharArray();
+            switch (wallType)
+            {
+            case WallsUtils.Walltype.WP:
+                // Debug.Log("Panel " + wallObject.WallObjectId);
+                // Debug.Log("sName[0] = " + splitedName[0] + " sName[1] = " + splitedName[1] + " sName[2] = " + splitedName[2]);                       
+
+                if (panelCode[0] == 'L') panelCode[0] = 'R';            // Player lane
+                else if (panelCode[0] == 'R') panelCode[0] = 'L';
+
+                if (panelCode[3] == 'L') panelCode[3] = 'R';            // Full Body Tilt
+                else if (panelCode[3] == 'R') panelCode[3] = 'L';
+
+                // panelCode[4] = (panelCode[4] == 'U') ? 'D' : 'U';       // Standing or crouch (not active in mirror)
+
+                if (panelCode[5] == 'L') panelCode[5] = 'R';            // Low angle posture
+                else if (panelCode[5] == 'R') panelCode[5] = 'L';
+
+                char tempChar = panelCode[1];
+                panelCode[1] = panelCode[2]; panelCode[2] = tempChar;
+
+                string strPanel = new string(panelCode);   // xxx read up on this ...
+                MirroredID = "WP." + strPanel;
+
+                break;
+
+            case WallsUtils.Walltype.WA:
+
+                MirroredID = splitedName[0] + "." + (splitedName[1] == "RI" ? "LI" : splitedName[1] == "LI" ? "RI" : splitedName[1] == "R" ? "L"
+                : splitedName[1] == "L" ? "R" : splitedName[1]) + "." + splitedName[2];
+
+                break;
+            case WallsUtils.Walltype.WH:
+
+                panelCode[0] = (panelCode[0] == 'L') ? 'R' : (panelCode[0] == 'R') ? 'L' : panelCode[0];  // Hit lane, possible values (LCR)
+                panelCode[1] = (panelCode[1] == 'L') ? 'R' : (panelCode[1] == 'R') ? 'L' : panelCode[1];  // Hit arm, possible values (LBR)
+                                                                                                            // panelCode[2] is Hit Row, can be (can be U or D)  (not part of left/right mirror)
+
+                string strPanel2 = new string(panelCode);
+                MirroredID = "WH." + strPanel2;
+
+                break;
+            case WallsUtils.Walltype.WC:  // gangnam style?                     
+                break;
+            case WallsUtils.Walltype.CN:
+
+                int invert_x = -(Int32.Parse(splitedName[1]));
+
+                MirroredID = splitedName[0] + "." + invert_x.ToString() + "." + splitedName[2];
+                break;
+            case WallsUtils.Walltype.EV:
+                break;
+            }
+        }
+        catch (Exception e)
+        {
+            Log.AddLine("Bad Wall Id -> " + id + " Error : " + e.StackTrace);
+            Debug.Log("try catch caught");
+        }
+
+        // Method assumes the mirror of a valid panel should be valid, but if one wants to recheck
+        // validity, this would validate and conditionally return to default shape.
+
+        // if (!WallsUtils.CheckWallId(wallType, strPanel)) wallObject.WallObjectId = savedPanelCode;
+
+        return MirroredID;
+    }
+	
     public static bool CheckCoinWall(string x, string y)
     {
         int xMin = -10;
