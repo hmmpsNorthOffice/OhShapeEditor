@@ -82,7 +82,7 @@ public static class WallsUtils
                 char tempChar = panelCode[1];
                 panelCode[1] = panelCode[2]; panelCode[2] = tempChar;
 
-                string strPanel = new string(panelCode);   // xxx read up on this ...
+                string strPanel = new string(panelCode);   
                 MirroredID = "WP." + strPanel;
 
                 break;
