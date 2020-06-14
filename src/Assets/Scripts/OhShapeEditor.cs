@@ -1459,7 +1459,10 @@ public class OhShapeEditor : MonoBehaviour
 
     public void Mirror()
     {
-
+	// I do not know why this method works...?
+	// It simply modifies the .WallObjectId of in the newly created Hashset...
+	//  ... but it does work ...
+	
         _clipboard = new HashSet<WallObject>(_selectedWallObjects);
         clearListOfSelectedObject(); 
 
